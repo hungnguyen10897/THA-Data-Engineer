@@ -11,6 +11,7 @@ conn = redshift_connector.connect(
    password='WJsXNo1TNw'
 )
 
+conn.autocommit = True
 cursor = conn.cursor()
 
 banner_images_url = "https://hungthas3.s3.eu-west-1.amazonaws.com/banner_images/"
@@ -56,7 +57,7 @@ def get_campaign(campaign_id):
     cursor.execute(query)
     banner_id = cursor.fetchone()
 
-    if banner_id == []:
+    if banner_id is None:
         return Response(status=404)
     else:
         return redirect(banner_images_url + f"image_{banner_id[0]}.png", code=302)
