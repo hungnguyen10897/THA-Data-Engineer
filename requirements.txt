@@ -1,0 +1,8 @@
+flask
+redshift_connector
+pandas
+psycopg2
+sqlalchemy-redshift
+pyarrow
+boto3
+s3fs
