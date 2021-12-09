@@ -6,3 +6,4 @@ sqlalchemy-redshift
 pyarrow
 boto3
 s3fs
+locust
