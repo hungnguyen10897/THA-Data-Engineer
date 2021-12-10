@@ -1,18 +1,10 @@
 from flask import Flask, render_template, flash, url_for, redirect, jsonify, send_file, abort, Response
 from src import app
 from datetime import datetime
-import redshift_connector
 
-conn = redshift_connector.connect(
-   host='hung-redshift-cluster.crdxyumc6dnp.eu-west-1.redshift.amazonaws.com',
-   port=5439,
-   database='tha',
-   user='tha_admin',
-   password='WJsXNo1TNw'
-)
+from backend import get_banner_id
+from web.src.backend import get_banner_id 
 
-conn.autocommit = True
-cursor = conn.cursor()
 
 banner_images_url = "https://hungthas3.s3.eu-west-1.amazonaws.com/banner_images/"
 
@@ -29,9 +21,10 @@ def index():
     return jsonify({"projects" : "THA"})
 
 @app.route("/campaigns/<campaign_id>", methods= ["GET"])
-def get_campaign(campaign_id):
+def get_banner(campaign_id):
 
-    try:
+    # Test path parameter, avoid SQL Injection
+    try:    
         campaign_id = int(campaign_id)
     except ValueError:
         return Response("Invalid Campaign ID", status=404)
@@ -46,21 +39,13 @@ def get_campaign(campaign_id):
     else:
         quarter = 4
     
-    query = f"""
-        SELECT * FROM
-            (
-                SELECT banner_id FROM revenues WHERE campaign_id = {campaign_id} AND quarter = {quarter} ORDER BY revenue DESC, number_of_clicks DESC LIMIT 10
-            )
-        ORDER BY RANDOM() LIMIT 1
-    """
-
-    cursor.execute(query)
-    banner_id = cursor.fetchone()
-
+    banner_id = get_banner_id(campaign_id, quarter)
     if banner_id is None:
         return Response(status=404)
     else:
-        return redirect(banner_images_url + f"image_{banner_id[0]}.png", code=302)
+        return redirect(banner_images_url + f"image_{banner_id}.png", code=302)
 
 
-
+@app.route("", methods = ["POST"])
+def upload():
+    pass

@@ -1,0 +1,3 @@
+"""
+All SQL Queries
+"""

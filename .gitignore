@@ -145,3 +145,4 @@ cython_debug/
 #.idea/
 
 .DS_Store
+note.md
