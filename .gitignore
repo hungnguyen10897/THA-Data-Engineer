@@ -148,7 +148,7 @@ cython_debug/
 note.md
 
 web/static/**
-web/src/config.json
+set_env_vars.sh
 init_data/csv/*.*/**
 init_data/csv/*.*/**
 

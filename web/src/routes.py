@@ -1,11 +1,10 @@
-from flask import Flask, render_template, flash, url_for, redirect, jsonify, send_file, abort, Response, request
+from flask import render_template, flash, url_for, redirect, Response, request
 from src import app
 from datetime import datetime
 from pathlib import Path
 
 from src.backend import get_banner_id, upload_csv
-
-banner_images_url = "https://hungthas3.s3.eu-west-1.amazonaws.com/banner_images/"
+from src import banner_images_url
 
 @app.route("/campaigns",  methods=['GET'])
 def index():

@@ -1,23 +1,9 @@
-import redshift_connector, boto3, time
+import time
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
-conn = redshift_connector.connect(
-   host='hung-redshift-cluster.crdxyumc6dnp.eu-west-1.redshift.amazonaws.com',
-   port=5439,
-   database='tha',
-   user='tha_admin',
-   password='WJsXNo1TNw'
-)
-
-conn.autocommit = True
-cursor = conn.cursor()
-
-s3 = boto3.resource('s3')
-bucket_name = "hungthas3"
-bucket_url = f"s3://{bucket_name}"
-my_bucket = s3.Bucket(bucket_name)
+from src import cursor, bucket, bucket_url
 
 # Table Schemas
 schemas = {
@@ -161,7 +147,7 @@ def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_n
 
     # Remove staging file
     folder_prefix = staging_parquet_folder.split(bucket_url)[1][1:]
-    my_bucket.objects.filter(Prefix=folder_prefix).delete()
+    bucket.objects.filter(Prefix=folder_prefix).delete()
 
 
 """
@@ -185,7 +171,7 @@ def upload_csv(file_path: Path, table: str, quarter: int):
     
     # Deduplication based on filename
     folder = f"{table}/quarter={quarter}/"
-    for object in my_bucket.objects.filter(Prefix=folder):
+    for object in bucket.objects.filter(Prefix=folder):
         object_name = object.key.split(folder)[1].split(".")[0]
         if file_stem == object_name:
             return (False, "A file with the same name already exists")
