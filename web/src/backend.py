@@ -1,6 +1,7 @@
 import redshift_connector, boto3, time
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
 conn = redshift_connector.connect(
    host='hung-redshift-cluster.crdxyumc6dnp.eu-west-1.redshift.amazonaws.com',
@@ -154,9 +155,9 @@ def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_n
 """
 Clean and upload data
 """
-def upload_csv(csv_file_name: str, table: str, quarter: int):
+def upload_csv(file_path: Path, table: str, quarter: int):
 
-    df = pd.read_csv(csv_file_name)
+    df = pd.read_csv(file_path)
     df = preprocess_csv_file(df, table)
 
     if df is None:
@@ -164,14 +165,14 @@ def upload_csv(csv_file_name: str, table: str, quarter: int):
 
     if df.empty:
         return (False, "All rows contain at least a NULL value")
-    
-    file_name = csv_file_name.split(".csv")[0]
+
+    file_stem = file_path.stem
     
     # Deduplication based on filename
     folder = f"{table}/quarter={quarter}/"
     for object in my_bucket.objects.filter(Prefix=folder):
         object_name = object.key.split(folder)[1].split(".")[0]
-        if file_name == object_name:
+        if file_stem == object_name:
             return (False, "A file with the same name already exists")
 
     df = deduplicate_content(df, table, quarter)
