@@ -2,9 +2,24 @@
 <html>
   <head>
     <title>Upload CSV File</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+
   </head>
   <body>
-    <h1>Upload your CSV file</h1>
+    <div class="content-section">
+    <h1>Upload CSV file</h1>
     <form method="POST" action="" enctype="multipart/form-data">
       <p><input type="file" name="file"></p>
 
@@ -14,7 +29,6 @@
         <option value="clicks">clicks</option>
         <option value="conversions">conversions</option>
         </select>
-        <br>
         <br>
         <label for="quarter">Time range</label>
         <select name="quarter" id="quarter">
@@ -26,5 +40,6 @@
 
       <p><input type="submit" value="Submit"></p>
     </form>
+  </div>
   </body>
 </html>

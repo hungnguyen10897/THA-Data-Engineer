@@ -46,11 +46,13 @@ def upload():
 
     file_parts = uploaded_file.filename.split('.')
     if len(file_parts) != 2:
-        return "Invalid Name for CSV file", 400
+        flash("Invalid Name for CSV file", 'danger')
+        return redirect(url_for('index'))
 
     file_type = file_parts[-1]
     if file_type != 'csv':
-        return "File should  be of type CSV", 400
+        flash("File should  be of type CSV", 'danger')
+        return redirect(url_for('index'))
     
     parent_path = Path(app.config['UPLOAD_FOLDER'])
     parent_path.mkdir(parents=True, exist_ok=True)
@@ -63,8 +65,9 @@ def upload():
     file_path.unlink()
 
     if succeeded:
-        print(f"Successfully uploaded to table '{table}' for quarter '{quarter}'")
+        flash(f"Successfully uploaded file to table '{table}' for quarter '{quarter}'", 'success')
         return redirect(url_for('index'))
     else:
-        return msg, 400
+        flash(msg, 'danger')
+        return redirect(url_for('index'))
 

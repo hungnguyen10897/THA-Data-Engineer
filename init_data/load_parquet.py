@@ -11,20 +11,22 @@ init_data_path = "./csv"
 
 
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-   print(f"\t\tPrefilter rows: {df.shape[0]}")
+   print(f"\t\tPre-filter rows: {df.shape[0]}")
 
    df.drop_duplicates(inplace= True)
    df.dropna(inplace= True)
 
-   print(f"\t\tFiltered rows: {df.shape[0]}")
+   print(f"\t\tPost-filter rows: {df.shape[0]}")
    return df
 
-if __name__ == "__main__":
+
+def upload_parquet_file():
    for path in os.walk(init_data_path, topdown=True):
       
       print(f"PATH: {path}")
       quarter = path[0].split("/")[-1]
 
+      # Configure 
       if quarter == "csv":
          continue
       
@@ -33,6 +35,13 @@ if __name__ == "__main__":
    
       if quarter == '1.1':
          quarter = 1
+
+      if quarter == '2' or quarter == '2.2':
+         continue
+   
+      if quarter == '2.1':
+         quarter = 2
+
 
       parentPath = Path(path[0])
       print(f"\tQUARTER: {quarter}")
@@ -61,6 +70,17 @@ if __name__ == "__main__":
          # ??? partition_cols
          df.to_parquet(parquet_url, engine= "pyarrow",compression="snappy", index=False)
          print("\n")
+   
 
 # Publish banner images
+
+
+
+
+
+if __name__ == "__main__":
+   upload_parquet_file()
+
+
+
 

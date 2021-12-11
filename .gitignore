@@ -149,6 +149,6 @@ note.md
 
 web/static/**
 web/src/config.json
-init_data/csv/1.1/**
-init_data/csv/1.2/**
+init_data/csv/*.*/**
+init_data/csv/*.*/**
 
