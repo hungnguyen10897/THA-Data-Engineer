@@ -3,7 +3,6 @@ Script to load init data to S3
 """
 import os
 from pathlib import Path
-import pyarrow
 import pandas as pd
 import time
 
@@ -29,13 +28,19 @@ if __name__ == "__main__":
       if quarter == "csv":
          continue
       
+      if quarter == '1' or quarter == '1.2':
+         continue
+   
+      if quarter == '1.1':
+         quarter = 1
+
       parentPath = Path(path[0])
       print(f"\tQUARTER: {quarter}")
       for file in path[2]:
          
          file_path = parentPath.joinpath(file)
-         file_name = str(file_path).split("/")[-1]
-         print(f"\t\tFILE: {file_path.resolve()}")
+         file_name = file_path.stem
+         # print(f"\t\tFILE: {file_path.resolve()}")
 
          df = pd.read_csv(file_path)
          df = clean_df(df)
@@ -48,11 +53,14 @@ if __name__ == "__main__":
          if "conversions" in file:
             table = "conversions"
          
+         print(f"\t\t{table}")
+
          epoch_now = int(time.time())
          parquet_url = f"{bucket}/{table}/quarter={quarter}/{file_name}.parquet.snappy"
-         print("\t\t", parquet_url)
+         # print("\t\t", parquet_url)
          # ??? partition_cols
          df.to_parquet(parquet_url, engine= "pyarrow",compression="snappy", index=False)
+         print("\n")
 
-         # required s3fs
-         # data = pd.read_csv('s3:/bucket....csv')
+# Publish banner images
+

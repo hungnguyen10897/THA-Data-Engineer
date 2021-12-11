@@ -37,6 +37,18 @@ schemas = {
     }
 }
 
+def get_column_definition(table: str)-> str:
+    definitions = []
+    for col, data_type in schemas[table].items():
+        if data_type == np.int64:
+            type_str = "INT8"
+        elif data_type == np.float64:
+            type_str = "FLOAT"
+
+        definitions.append(f"{col} {type_str}")
+    
+    return ", ".join(definitions)
+
 
 """
 Get banner ID for a campaign ID
@@ -90,14 +102,15 @@ def deduplicate_content(df: pd.DataFrame, table: str, quarter: str):
         query_cols = ["conversion_id"]
 
     query = f"""
-        SELECT {",".join(query_cols)} FROM ext_tha_schema.{table} WHERE quarter = {quarter} AND NOT(banner_id = 410 AND campaign_id = 27)
+        SELECT {",".join(query_cols)} FROM ext_tha_schema.{table} WHERE quarter = {quarter}
     """
 
     cursor.execute(query)
     remote_df = cursor.fetch_dataframe()
 
-    # Assert there's alway data in the database
-    assert(remote_df is not None)
+    # if there's no data in the table
+    if remote_df is None:
+        return df
     
     filter_na_col = "filter"
     remote_df[filter_na_col] = True
@@ -128,8 +141,7 @@ def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_n
 
     create_temp_table_query = f"""
         CREATE EXTERNAL TABLE ext_tha_schema.{staging_table_name}(
-            banner_id INT8,
-            campaign_id INT8
+            {get_column_definition(table)}
         )
         STORED AS PARQUET
         LOCATION '{staging_parquet_folder}';
@@ -148,8 +160,8 @@ def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_n
     cursor.execute(f"DROP TABLE IF EXISTS ext_tha_schema.{staging_table_name};")
 
     # Remove staging file
-    folder_prefix = staging_parquet_folder.split(bucket_url)[1]
-    my_bucket.objects.filter(Prefix=staging_parquet_folder).delete()
+    folder_prefix = staging_parquet_folder.split(bucket_url)[1][1:]
+    my_bucket.objects.filter(Prefix=folder_prefix).delete()
 
 
 """
@@ -158,13 +170,16 @@ Clean and upload data
 def upload_csv(file_path: Path, table: str, quarter: int):
 
     df = pd.read_csv(file_path)
+    if df.empty:
+        return (False, "No rows in file.")
+
     df = preprocess_csv_file(df, table)
 
     if df is None:
-        return (False, "Provided file doesn't conform to expected schema.")
+        return (False, f"Provided file doesn't conform to expected schema for table '{table}'.")
 
     if df.empty:
-        return (False, "All rows contain at least a NULL value")
+        return (False, "No valid rows in file.")
 
     file_stem = file_path.stem
     
@@ -176,6 +191,8 @@ def upload_csv(file_path: Path, table: str, quarter: int):
             return (False, "A file with the same name already exists")
 
     df = deduplicate_content(df, table, quarter)
-    if not df.empty:
-        synch_with_internal_table(df, table, quarter)
-
+    if df.empty:
+        return (False, "All rows are duplicates.")
+    else:
+        synch_with_internal_table(df, table, quarter, file_stem)
+        return (True, "")

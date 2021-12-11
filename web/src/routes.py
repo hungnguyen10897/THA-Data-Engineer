@@ -58,10 +58,13 @@ def upload():
 
     uploaded_file.save(file_path)
     
-    upload_csv(file_path, table, quarter)
+    succeeded, msg = upload_csv(file_path, table, quarter)
 
     file_path.unlink()
 
-    print(f"Successfully uploaded to table '{table}' for quarter '{quarter}'")
-    return redirect(url_for('index'))
+    if succeeded:
+        print(f"Successfully uploaded to table '{table}' for quarter '{quarter}'")
+        return redirect(url_for('index'))
+    else:
+        return msg, 400
 
