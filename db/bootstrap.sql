@@ -10,11 +10,11 @@ GRANT ALL PRIVILEGES ON ALL PROCEDURES IN SCHEMA public TO tha_admin;
 
 DROP TABLE IF EXISTS revenues;
 CREATE TABLE revenues(
-    campaign_id INT,
-    banner_id INT,
-    quarter INT,
-    revenue FLOAT,
-    number_of_clicks INT
+    campaign_id INT NOT NULL,
+    banner_id INT NOT NULL,
+    quarter INT NOT NULL,
+    revenue FLOAT NOT NULL,
+    number_of_clicks INT NOT NULL
 )
 
 ALTER TABLE public.revenues OWNER TO tha_admin
@@ -105,11 +105,8 @@ LEFT JOIN  ext_tha_schema.conversions AS conversions
 GROUP BY impressions.campaign_id, impressions.banner_id, impressions.quarter;
 
 -- CREATE STORED PROCEDURES
-CREATE OR REPLACE PROCEDURE public.synch_new_impressions
-(
-  ext_table text,
-  quarter text
-)
+CREATE OR REPLACE PROCEDURE public.synch_new_impressions(ext_table character varying(256), quarter character varying(1))
+LANGUAGE plpgsql
 AS $$
 BEGIN
 
@@ -169,14 +166,11 @@ BEGIN
     
     DROP TABLE temp;
 END;
-$$ LANGUAGE plpgsql;
+$$
 
 
-CREATE OR REPLACE PROCEDURE public.synch_new_clicks
-(
-  ext_table text,
-  quarter text
-)
+CREATE OR REPLACE PROCEDURE public.synch_new_clicks(ext_table character varying(256), quarter character varying(1))
+LANGUAGE plpgsql
 AS $$
 BEGIN
 
@@ -210,7 +204,7 @@ BEGIN
     +      'FROM ( '
     +        'SELECT * FROM ext_tha_schema.impressions WHERE quarter= ' || quarter
     +      ') AS impressions '
-    +      'LEFT JOIN '
+    +      'JOIN '
     +        '( '
     +          'SELECT * FROM ' || ext_table
     +        ') AS clicks '
@@ -236,14 +230,11 @@ BEGIN
     
     DROP TABLE temp;
 END;
-$$ LANGUAGE plpgsql;
+$$
 
 
-CREATE OR REPLACE PROCEDURE public.synch_new_conversions
-(
-  ext_table text,
-  quarter text
-)
+CREATE OR REPLACE PROCEDURE public.synch_new_conversions(ext_table character varying(256), quarter character varying(256))
+LANGUAGE plpgsql
 AS $$
 BEGIN
 
@@ -270,20 +261,17 @@ BEGIN
     +            'WHEN SUM(conversions.revenue) IS NOT NULL THEN SUM(conversions.revenue) '
     +            'ELSE 0 '
     +        'END AS revenue, '
-    +        'CASE '
-    +            'WHEN COUNT(clicks.click_id) IS NOT NULL THEN COUNT(clicks.click_id) '
-    +            'ELSE 0 '
-    +        'END AS number_of_clicks '
+    +        '0 AS number_of_clicks '
     +      'FROM ( '
     +        'SELECT * FROM ext_tha_schema.impressions WHERE quarter= ' || quarter
     +      ') AS impressions '
-    +      'LEFT JOIN '
+    +      'JOIN '
     +        '( '
     +          'SELECT * FROM ext_tha_schema.clicks WHERE quarter= ' || quarter
     +        ') AS clicks '
     +      'ON impressions.banner_id = clicks.banner_id '
     +         'AND impressions.campaign_id = clicks.campaign_id '
-    +      'LEFT JOIN '
+    +      'JOIN '
     +        '( '
     +          'SELECT * FROM ' || ext_table
     +        ') AS conversions '
@@ -303,6 +291,5 @@ BEGIN
     
     DROP TABLE temp;
 END;
-$$ LANGUAGE plpgsql;
-
+$$
 
