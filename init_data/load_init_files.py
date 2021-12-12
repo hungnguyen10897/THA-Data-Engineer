@@ -1,22 +1,19 @@
 """
 Script to load init data to S3
 """
-import os
+import os, time, boto3, asyncio
 from pathlib import Path
 import pandas as pd
-import time
 
-bucket = "s3://hungthas3"
+bucket_name = "hung-tha-bucket"
+bucket = f"s3://{bucket_name}"
 init_data_path = "./csv"
+image_path = "./images"
 
 
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-   print(f"\t\tPre-filter rows: {df.shape[0]}")
-
    df.drop_duplicates(inplace= True)
    df.dropna(inplace= True)
-
-   print(f"\t\tPost-filter rows: {df.shape[0]}")
    return df
 
 
@@ -30,17 +27,17 @@ def upload_parquet_file():
       if quarter == "csv":
          continue
       
-      if quarter == '1' or quarter == '1.2':
+      if quarter == '1.1' or quarter == '1.2':
          continue
    
-      if quarter == '1.1':
-         quarter = 1
+      # if quarter == '1.1':
+      #    quarter = 1
 
-      if quarter == '2' or quarter == '2.2':
-         continue
+      # if quarter == '2' or quarter == '2.2':
+      #    continue
    
-      if quarter == '2.1':
-         quarter = 2
+      # if quarter == '2.1':
+      #    quarter = 2
 
 
       parentPath = Path(path[0])
@@ -49,7 +46,6 @@ def upload_parquet_file():
          
          file_path = parentPath.joinpath(file)
          file_name = file_path.stem
-         # print(f"\t\tFILE: {file_path.resolve()}")
 
          df = pd.read_csv(file_path)
          df = clean_df(df)
@@ -64,23 +60,23 @@ def upload_parquet_file():
          
          print(f"\t\t{table}")
 
-         epoch_now = int(time.time())
          parquet_url = f"{bucket}/{table}/quarter={quarter}/{file_name}.parquet.snappy"
-         # print("\t\t", parquet_url)
+
          # ??? partition_cols
          df.to_parquet(parquet_url, engine= "pyarrow",compression="snappy", index=False)
-         print("\n")
-   
-
-# Publish banner images
 
 
-
+def upload_banner_images():
+   for path in os.walk(image_path, topdown=True):
+      parent = Path(path[0])
+      for file in path[2]:
+         file_path = parent.joinpath(file)
+         file_name = file_path.stem
+         s3_client = boto3.client('s3')
+         print(f"\tUploading {file_path}")
+         s3_client.upload_file(str(file_path), bucket_name, f"banner_images/{file_name}")
 
 
 if __name__ == "__main__":
+   upload_banner_images()
    upload_parquet_file()
-
-
-
-
