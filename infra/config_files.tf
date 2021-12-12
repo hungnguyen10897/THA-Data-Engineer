@@ -28,7 +28,7 @@ resource "local_file" "flask_configs" {
   content  = <<EOF
 {
   "FLASK_SECRET_KEY": "${random_password.flask_secret_key.result}",
-  "REDSHIFT_HOST": "${aws_redshift_cluster.default.endpoint}",
+  "REDSHIFT_HOST": "${aws_redshift_cluster.default.dns_name}",
   "REDSHIFT_PORT": "${aws_redshift_cluster.default.port}",
   "REDSHIFT_DATABASE": "${aws_redshift_cluster.default.database_name}",
   "REDSHIFT_THA_USER": "${var.redshift_tha_user}",
@@ -44,7 +44,7 @@ resource "local_file" "data_setup_configs" {
   filename = "${path.module}/data_setup_configs.json"
   content  = <<EOF
 {
-  "REDSHIFT_HOST": "${aws_redshift_cluster.default.endpoint}",
+  "REDSHIFT_HOST": "${aws_redshift_cluster.default.dns_name}",
   "REDSHIFT_PORT": "${aws_redshift_cluster.default.port}",
   "REDSHIFT_DATABASE": "${aws_redshift_cluster.default.database_name}",
   "REDSHIFT_MASTER_USER": "${aws_redshift_cluster.default.master_username}",
