@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "default" {
-  bucket = "${var.prefix}bucket"
+  bucket = "${var.prefix}-bucket"
   acl    = "private"
 
   tags = var.default_tags
