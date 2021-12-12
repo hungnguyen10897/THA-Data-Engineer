@@ -80,11 +80,17 @@ resource "aws_iam_role_policy_attachment" "redshift" {
   policy_arn = aws_iam_policy.redshift.arn
 }
 
+resource "random_password" "redshift_master_password" {
+  length      = 8
+  special     = false
+  min_numeric = 1
+}
+
 resource "aws_redshift_cluster" "default" {
   cluster_identifier  = "${var.prefix}-redshift-cluster"
   database_name       = "tha"
   master_username     = "hung"
-  master_password     = "Hung1111"
+  master_password     = random_password.redshift_master_password.result
   node_type           = "dc2.large"
   cluster_type        = "single-node"
   iam_roles           = [aws_iam_role.redshift.arn]
