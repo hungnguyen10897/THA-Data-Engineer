@@ -1,7 +1,3 @@
--- Will be deployed by Terraform
--- INTERNAL
-CREATE DATABASE tha;
-
 CREATE USER tha_admin PASSWORD 'WJsXNo1TNw';
 GRANT ALL PRIVILEGES ON DATABASE tha TO tha_admin;
 ALTER SCHEMA public OWNER TO tha_admin;
@@ -20,64 +16,64 @@ CREATE TABLE revenues(
 ALTER TABLE public.revenues OWNER TO tha_admin
 
 -- EXTERNAL SCHEMA AND TABLES
-CREATE EXTERNAL SCHEMA ext_tha_schema FROM DATA CATALOG 
-DATABASE 'hung_ext_tha_db' 
-iam_role 'arn:aws:iam::939595455984:role/hung-redshift-spectrum'
+CREATE EXTERNAL SCHEMA hung_tha_schema FROM DATA CATALOG 
+DATABASE 'hung_ext_tha_db_2' 
+iam_role 'arn:aws:iam::939595455984:role/hung-tha-redshift-spectrum'
 CREATE EXTERNAL DATABASE IF NOT EXISTS;
 
---GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ext_tha_schema TO tha_admin;
-GRANT USAGE ON SCHEMA ext_tha_schema to tha_admin;
-ALTER SCHEMA ext_tha_schema OWNER TO tha_admin;
+--GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA hung_tha_schema TO tha_admin;
+GRANT USAGE ON SCHEMA hung_tha_schema to tha_admin;
+ALTER SCHEMA hung_tha_schema OWNER TO tha_admin;
 
 -- Impressions
-DROP TABLE IF EXISTS ext_tha_schema.impressions;
-CREATE EXTERNAL TABLE ext_tha_schema.impressions(
+DROP TABLE IF EXISTS hung_tha_schema.impressions;
+CREATE EXTERNAL TABLE hung_tha_schema.impressions(
     banner_id INT8 ,
     campaign_id INT8
 )
 PARTITIONED BY (quarter INT)
 STORED AS PARQUET
-LOCATION 's3://hungthas3/impressions/';
+LOCATION 's3://hung-tha-bucket/impressions/';
 
-ALTER TABLE ext_tha_schema.impressions ADD
-PARTITION (quarter= 1) LOCATION 's3://hungthas3/impressions/quarter=1/'
-PARTITION (quarter= 2) LOCATION 's3://hungthas3/impressions/quarter=2/'
-PARTITION (quarter= 3) LOCATION 's3://hungthas3/impressions/quarter=3/'
-PARTITION (quarter= 4) LOCATION 's3://hungthas3/impressions/quarter=4/';
+ALTER TABLE hung_tha_schema.impressions ADD
+PARTITION (quarter= 1) LOCATION 's3://hung-tha-bucket/impressions/quarter=1/'
+PARTITION (quarter= 2) LOCATION 's3://hung-tha-bucket/impressions/quarter=2/'
+PARTITION (quarter= 3) LOCATION 's3://hung-tha-bucket/impressions/quarter=3/'
+PARTITION (quarter= 4) LOCATION 's3://hung-tha-bucket/impressions/quarter=4/';
 
 -- Clicks
-DROP TABLE IF EXISTS ext_tha_schema.clicks;
-CREATE EXTERNAL TABLE ext_tha_schema.clicks(
+DROP TABLE IF EXISTS hung_tha_schema.clicks;
+CREATE EXTERNAL TABLE hung_tha_schema.clicks(
     banner_id INT8 ,
     campaign_id INT8,
     click_id INT8
 )
 PARTITIONED BY (quarter INT)
 STORED AS PARQUET
-LOCATION 's3://hungthas3/clicks/';
+LOCATION 's3://hung-tha-bucket/clicks/';
 
-ALTER TABLE ext_tha_schema.clicks ADD
-PARTITION (quarter= 1) LOCATION 's3://hungthas3/clicks/quarter=1/'
-PARTITION (quarter= 2) LOCATION 's3://hungthas3/clicks/quarter=2/'
-PARTITION (quarter= 3) LOCATION 's3://hungthas3/clicks/quarter=3/'
-PARTITION (quarter= 4) LOCATION 's3://hungthas3/clicks/quarter=4/';
+ALTER TABLE hung_tha_schema.clicks ADD
+PARTITION (quarter= 1) LOCATION 's3://hung-tha-bucket/clicks/quarter=1/'
+PARTITION (quarter= 2) LOCATION 's3://hung-tha-bucket/clicks/quarter=2/'
+PARTITION (quarter= 3) LOCATION 's3://hung-tha-bucket/clicks/quarter=3/'
+PARTITION (quarter= 4) LOCATION 's3://hung-tha-bucket/clicks/quarter=4/';
 
 -- Conversions
-DROP TABLE IF EXISTS ext_tha_schema.conversions;
-CREATE EXTERNAL TABLE ext_tha_schema.conversions(
+DROP TABLE IF EXISTS hung_tha_schema.conversions;
+CREATE EXTERNAL TABLE hung_tha_schema.conversions(
     conversion_id INT8,
     click_id INT8,
     revenue FLOAT
 )
 PARTITIONED BY (quarter INT)
 STORED AS PARQUET
-LOCATION 's3://hungthas3/conversions/';
+LOCATION 's3://hung-tha-bucket/conversions/';
 
-ALTER TABLE ext_tha_schema.conversions ADD
-PARTITION (quarter= 1) LOCATION 's3://hungthas3/conversions/quarter=1/'
-PARTITION (quarter= 2) LOCATION 's3://hungthas3/conversions/quarter=2/'
-PARTITION (quarter= 3) LOCATION 's3://hungthas3/conversions/quarter=3/'
-PARTITION (quarter= 4) LOCATION 's3://hungthas3/conversions/quarter=4/';
+ALTER TABLE hung_tha_schema.conversions ADD
+PARTITION (quarter= 1) LOCATION 's3://hung-tha-bucket/conversions/quarter=1/'
+PARTITION (quarter= 2) LOCATION 's3://hung-tha-bucket/conversions/quarter=2/'
+PARTITION (quarter= 3) LOCATION 's3://hung-tha-bucket/conversions/quarter=3/'
+PARTITION (quarter= 4) LOCATION 's3://hung-tha-bucket/conversions/quarter=4/';
 
 -- POPULATE INTERNAL AGGREGATED TABLE
 TRUNCATE TABLE revenues;
@@ -94,12 +90,12 @@ SELECT
   		WHEN COUNT(clicks.click_id) IS NOT NULL THEN COUNT(clicks.click_id)
   		ELSE 0
     END AS number_of_clicks
-FROM ext_tha_schema.impressions AS impressions
-LEFT JOIN ext_tha_schema.clicks AS clicks
+FROM hung_tha_schema.impressions AS impressions
+LEFT JOIN hung_tha_schema.clicks AS clicks
   ON impressions.banner_id = clicks.banner_id
   	AND impressions.campaign_id = clicks.campaign_id
     AND impressions.quarter = clicks.quarter
-LEFT JOIN  ext_tha_schema.conversions AS conversions
+LEFT JOIN  hung_tha_schema.conversions AS conversions
   ON clicks.click_id = conversions.click_id
   	AND conversions.quarter = clicks.quarter
 GROUP BY impressions.campaign_id, impressions.banner_id, impressions.quarter;
@@ -142,13 +138,13 @@ BEGIN
     +      ') AS impressions '
     +      'LEFT JOIN '
     +        '( '
-    +          'SELECT * FROM ext_tha_schema.clicks WHERE quarter= ' || quarter
+    +          'SELECT * FROM hung_tha_schema.clicks WHERE quarter= ' || quarter
     +        ') AS clicks '
     +      'ON impressions.banner_id = clicks.banner_id '
     +         'AND impressions.campaign_id = clicks.campaign_id '
     +      'LEFT JOIN '
     +        '( '
-    +          'SELECT * FROM ext_tha_schema.conversions WHERE quarter= ' || quarter
+    +          'SELECT * FROM hung_tha_schema.conversions WHERE quarter= ' || quarter
     +        ') AS conversions '
     +      'ON clicks.click_id = conversions.click_id '
     +      'GROUP BY impressions.campaign_id, impressions.banner_id '
@@ -202,7 +198,7 @@ BEGIN
     +            'ELSE 0 '
     +        'END AS number_of_clicks '
     +      'FROM ( '
-    +        'SELECT * FROM ext_tha_schema.impressions WHERE quarter= ' || quarter
+    +        'SELECT * FROM hung_tha_schema.impressions WHERE quarter= ' || quarter
     +      ') AS impressions '
     +      'JOIN '
     +        '( '
@@ -212,7 +208,7 @@ BEGIN
     +         'AND impressions.campaign_id = clicks.campaign_id '
     +      'LEFT JOIN '
     +        '( '
-    +          'SELECT * FROM ext_tha_schema.conversions WHERE quarter= ' || quarter
+    +          'SELECT * FROM hung_tha_schema.conversions WHERE quarter= ' || quarter
     +        ') AS conversions '
     +      'ON clicks.click_id = conversions.click_id '
     +      'GROUP BY impressions.campaign_id, impressions.banner_id '
@@ -263,11 +259,11 @@ BEGIN
     +        'END AS revenue, '
     +        '0 AS number_of_clicks '
     +      'FROM ( '
-    +        'SELECT * FROM ext_tha_schema.impressions WHERE quarter= ' || quarter
+    +        'SELECT * FROM hung_tha_schema.impressions WHERE quarter= ' || quarter
     +      ') AS impressions '
     +      'JOIN '
     +        '( '
-    +          'SELECT * FROM ext_tha_schema.clicks WHERE quarter= ' || quarter
+    +          'SELECT * FROM hung_tha_schema.clicks WHERE quarter= ' || quarter
     +        ') AS clicks '
     +      'ON impressions.banner_id = clicks.banner_id '
     +         'AND impressions.campaign_id = clicks.campaign_id '
