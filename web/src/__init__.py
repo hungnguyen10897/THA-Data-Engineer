@@ -4,7 +4,7 @@ from psycopg2 import pool
 
 app = Flask(__name__)
 
-with open('data_setup_configs.json', 'r') as f:
+with open('flask_configs.json', 'r') as f:
    configs = json.load(f)
 
 app.config['SECRET_KEY'] =  configs["FLASK_SECRET_KEY"]

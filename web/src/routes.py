@@ -35,7 +35,8 @@ def get_banner(campaign_id):
     if banner_id is None:
         return Response(status=404)
     else:
-        return redirect(banner_images_url + f"image_{banner_id}.png", code=302)
+        image_url = banner_images_url + f"image_{banner_id}.png"
+        return render_template('banner.html', image_url=image_url)
 
 
 @app.route("/campaigns", methods = ["POST"])

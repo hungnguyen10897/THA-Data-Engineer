@@ -23,6 +23,10 @@ schemas = {
     }
 }
 
+
+"""
+Get SQL columns definition string from schema
+"""
 def get_column_definition(table: str)-> str:
     definitions = []
     for col, data_type in schemas[table].items():
@@ -66,8 +70,6 @@ def get_banner_id(campaign_id: int, quarter: int) -> str:
 Preprocess DataFrame: Drop duplicate rows, Drop NA
 """
 def preprocess_csv_file(df: pd.DataFrame, table: str) -> pd.DataFrame:
-    print(f"\t\tPrefilter rows: {df.shape[0]}")
-
     # Preliminary Schema check
     expected_schema = pd.Series(schemas[table])
     if not expected_schema.equals(df.dtypes):
@@ -76,7 +78,6 @@ def preprocess_csv_file(df: pd.DataFrame, table: str) -> pd.DataFrame:
     df.drop_duplicates(inplace= True)
     df.dropna(inplace= True)
 
-    print(f"\t\tFiltered rows: {df.shape[0]}")
     return df
 
 
