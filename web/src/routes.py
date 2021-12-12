@@ -6,9 +6,11 @@ from pathlib import Path
 from src.backend import get_banner_id, upload_csv
 from src import banner_images_url
 
+
 @app.route("/campaigns",  methods=['GET'])
 def index():
     return render_template('index.html')
+
 
 @app.route("/campaigns/<campaign_id>", methods= ["GET"])
 def get_banner(campaign_id):

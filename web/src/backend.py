@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from src import cursor, bucket, bucket_url
+from src import connection_pool, bucket, bucket_url
 
 # Table Schemas
 schemas = {
@@ -40,6 +40,9 @@ def get_column_definition(table: str)-> str:
 Get banner ID for a campaign ID
 """
 def get_banner_id(campaign_id: int, quarter: int) -> str:
+    conn = connection_pool.getconn()
+    conn.autocommit = True
+    cursor = conn.cursor()
     query = f"""
         SELECT * FROM
             (
@@ -50,6 +53,8 @@ def get_banner_id(campaign_id: int, quarter: int) -> str:
 
     cursor.execute(query)
     banner_id = cursor.fetchone()
+
+    connection_pool.putconn(conn)
 
     if banner_id is None:
         return None
@@ -78,7 +83,7 @@ def preprocess_csv_file(df: pd.DataFrame, table: str) -> pd.DataFrame:
 """
 Deduplicate the DataFrame based on contents of remote table
 """
-def deduplicate_content(df: pd.DataFrame, table: str, quarter: str):
+def deduplicate_content(df: pd.DataFrame, table: str, quarter: str)-> pd.DataFrame:
     # Deduplication based on file content
     if table == "impressions":
         query_cols = ["banner_id", "campaign_id"]
@@ -87,15 +92,21 @@ def deduplicate_content(df: pd.DataFrame, table: str, quarter: str):
     elif table == "conversions":
         query_cols = ["conversion_id"]
 
+    conn = connection_pool.getconn()
+    conn.autocommit = True
+    cursor = conn.cursor()
+
     query = f"""
         SELECT {",".join(query_cols)} FROM ext_tha_schema.{table} WHERE quarter = {quarter}
     """
 
     cursor.execute(query)
-    remote_df = cursor.fetch_dataframe()
+    remote_df = pd.DataFrame(cursor.fetchall(), columns=query_cols)
+
+    connection_pool.putconn(conn)
 
     # if there's no data in the table
-    if remote_df is None:
+    if remote_df.empty:
         return df
     
     filter_na_col = "filter"
@@ -111,7 +122,7 @@ def deduplicate_content(df: pd.DataFrame, table: str, quarter: str):
 """
 Sequence of steps to synch new data with internal table 'tha.public.revenues'.
 """
-def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_name: str):
+def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_name: str)-> None:
 
     # Upload to staging
     epoch_now = int(time.time())
@@ -121,6 +132,10 @@ def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_n
     print("\t\t", staging_parquet_url)
 
     df.to_parquet(staging_parquet_url, engine= "pyarrow",compression="snappy", index=False)
+
+    conn = connection_pool.getconn()
+    conn.autocommit = True
+    cursor = conn.cursor()
 
     # Create temporary external table
     cursor.execute(f"DROP TABLE IF EXISTS ext_tha_schema.{staging_table_name};")
@@ -144,6 +159,8 @@ def synch_with_internal_table(df: pd.DataFrame, table: str, quarter: int, file_n
 
     # Remove staging table
     cursor.execute(f"DROP TABLE IF EXISTS ext_tha_schema.{staging_table_name};")
+
+    connection_pool.putconn(conn)
 
     # Remove staging file
     folder_prefix = staging_parquet_folder.split(bucket_url)[1][1:]
@@ -180,5 +197,9 @@ def upload_csv(file_path: Path, table: str, quarter: int):
     if df.empty:
         return (False, "All rows are duplicates.")
     else:
-        synch_with_internal_table(df, table, quarter, file_stem)
-        return (True, "")
+        try:
+            synch_with_internal_table(df, table, quarter, file_stem)
+            return (True, "")
+        except Exception as e:
+            return (False, f"Exception raised: {e}")
+        

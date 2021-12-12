@@ -1,26 +1,30 @@
 from flask import Flask
-import os, redshift_connector, boto3
+import os, boto3, psycopg2, json
+from psycopg2 import pool
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] =  os.environ["FLASK_SECRET_KEY"]
+
+with open('data_setup_configs.json', 'r') as f:
+   configs = json.load(f)
+
+app.config['SECRET_KEY'] =  configs["FLASK_SECRET_KEY"]
 app.config['UPLOAD_FOLDER'] =  'static/files'
 
-conn = redshift_connector.connect(
-   host = os.environ["REDSHIFT_HOST"],
-   port = int(os.environ["REDSHIFT_PORT"]),
-   database = os.environ["REDSHIFT_DATABASE"],
-   user = os.environ["REDSHIFT_USER"],
-   password = os.environ["REDSHIFT_PASSWORD"]
+connection_pool = psycopg2.pool.SimpleConnectionPool(
+   1,
+   200,
+   user = configs["REDSHIFT_THA_USER"],
+   password= configs["REDSHIFT_THA_USER_PASSWORD"],
+   host = configs["REDSHIFT_HOST"],
+   port = int(configs["REDSHIFT_PORT"]),
+   database = configs["REDSHIFT_DATABASE"]
 )
 
-conn.autocommit = True
-cursor = conn.cursor()
-
 s3 = boto3.resource('s3')
-bucket_name = "hungthas3"
+bucket_name = configs["BUCKET"]
 bucket_url = f"s3://{bucket_name}"
 bucket = s3.Bucket(bucket_name)
 
-banner_images_url = os.environ["BANNER_IMAGES_URL"]
+banner_images_url = configs["BANNER_IMAGES_URL"]
 
 from src import routes
