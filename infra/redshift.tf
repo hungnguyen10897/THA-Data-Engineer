@@ -81,13 +81,14 @@ resource "aws_iam_role_policy_attachment" "redshift" {
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "${var.prefix}-redshift-cluster"
-  database_name      = "tha"
-  master_username    = "hung"
-  master_password    = "Hung1111"
-  node_type          = "dc2.large"
-  cluster_type       = "single-node"
-  iam_roles          = [aws_iam_role.redshift.arn]
+  cluster_identifier  = "${var.prefix}-redshift-cluster"
+  database_name       = "tha"
+  master_username     = "hung"
+  master_password     = "Hung1111"
+  node_type           = "dc2.large"
+  cluster_type        = "single-node"
+  iam_roles           = [aws_iam_role.redshift.arn]
+  skip_final_snapshot = true
 
   tags = var.default_tags
 }
