@@ -2,9 +2,7 @@ resource "aws_s3_bucket" "default" {
   bucket = "${var.prefix}bucket"
   acl    = "private"
 
-  tags = {
-    owner = "hung"
-  }
+  tags = var.default_tags
 }
 
 resource "aws_s3_bucket_policy" "default" {
@@ -26,7 +24,7 @@ resource "aws_s3_bucket_policy" "default" {
       {
         Effect = "Allow",
         Principal = {
-          AWS = "arn:aws:iam::939595455984:user/hung-lightsail-container-service"
+          AWS = "${aws_iam_user.lightsail.arn}"
         },
         Action = "s3:*",
         Resource = [
