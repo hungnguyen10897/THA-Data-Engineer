@@ -152,3 +152,9 @@ set_env_vars.sh
 init_data/csv/*.*/**
 init_data/csv/*.*/**
 
+**credentials**
+
+**.terraform*
+**terraform.tfstate**
+**data_setup_configs.json**
+**flask_configs.json**

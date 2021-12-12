@@ -24,7 +24,7 @@ resource "random_password" "redshift_tha_user_password" {
 
 # To be used by Flask app to access database and S3 bucket
 resource "local_file" "flask_configs" {
-  filename = "${path.module}/flask_config.json"
+  filename = "${path.module}/flask_configs.json"
   content  = <<EOF
 {
   "FLASK_SECRET_KEY": "${random_password.flask_secret_key.result}",
