@@ -44,21 +44,28 @@ def get_column_definition(table: str)-> str:
 Get banner ID for a campaign ID
 """
 def get_banner_id(campaign_id: int, quarter: int) -> str:
-    conn = connection_pool.getconn()
-    conn.autocommit = True
-    cursor = conn.cursor()
-    query = f"""
-        SELECT * FROM
-            (
-                SELECT banner_id FROM revenues WHERE campaign_id = {campaign_id} AND quarter = {quarter} ORDER BY revenue DESC, number_of_clicks DESC LIMIT 10
-            )
-        ORDER BY RANDOM() LIMIT 1
-    """
+    banner_id = None
+    conn = None
+    try:
+        conn = connection_pool.getconn()
+        conn.autocommit = True
 
-    cursor.execute(query)
-    banner_id = cursor.fetchone()
+        query = f"""
+            SELECT * FROM
+                (
+                    SELECT banner_id FROM revenues WHERE campaign_id = {campaign_id} AND quarter = {quarter} ORDER BY revenue DESC, number_of_clicks DESC LIMIT 10
+                )
+            ORDER BY RANDOM() LIMIT 1
+        """
 
-    connection_pool.putconn(conn)
+        with conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query)
+                banner_id = cursor.fetchone()
+
+    finally:
+        if conn is not None:
+            connection_pool.putconn(conn)
 
     if banner_id is None:
         return None

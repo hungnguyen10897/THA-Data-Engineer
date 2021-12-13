@@ -12,7 +12,7 @@ app.config['UPLOAD_FOLDER'] =  'static/files'
 
 connection_pool = psycopg2.pool.SimpleConnectionPool(
    1,
-   200,
+   150,
    user = configs["REDSHIFT_THA_USER"],
    password= configs["REDSHIFT_THA_USER_PASSWORD"],
    host = configs["REDSHIFT_HOST"],
