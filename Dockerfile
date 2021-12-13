@@ -5,7 +5,7 @@ USER root
 
 WORKDIR /app
 
-COPY deploy_requirements.txt ./requirements.txt
+COPY init_data/requirements.txt ./requirements.txt
 
 # Python packages
 RUN pip install --upgrade pip
@@ -19,12 +19,8 @@ RUN mv terraform /usr/bin/terraform
 # This will get your .aws credentuals
 COPY credentials /root/.aws/
 
-# Set up all infra
-COPY infra ./infra/
-RUN cd infra \
-    && terraform init && \
-    terraform apply -auto-approve
+COPY deploy.sh .
 
-COPY db ./db/
+RUN chmod +x deploy.sh
 
-CMD ["/bin/sh"]
+CMD ["./deploy.sh"]
