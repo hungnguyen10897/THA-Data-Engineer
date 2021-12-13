@@ -113,15 +113,18 @@ def deduplicate_content(df: pd.DataFrame, table: str, quarter: str)-> pd.DataFra
 
     connection_pool.putconn(conn)
 
-    # if there's no data in the table
+    # if there's no data in the remote table
     if remote_df.empty:
         return df
     
     filter_na_col = "filter"
+    # Create new column, will later be used for filter
     remote_df[filter_na_col] = True
     joined_df = pd.merge(df, remote_df, how='left', on=query_cols)
 
-    # Filter non-na 
+    # Filter non-na
+    # keep rows whose filter_na_col is 'na' in joined dataframe
+    # if not 'na', old data already has those rows
     joined_df = joined_df[pd.isna(joined_df[filter_na_col])].drop(filter_na_col, axis=1)
 
     return joined_df

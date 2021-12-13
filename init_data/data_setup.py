@@ -32,19 +32,6 @@ def upload_parquet_file():
       if quarter == "csv":
          continue
       
-      if quarter == '1.1' or quarter == '1.2':
-         continue
-   
-      # if quarter == '1.1':
-      #    quarter = 1
-
-      # if quarter == '2' or quarter == '2.2':
-      #    continue
-   
-      # if quarter == '2.1':
-      #    quarter = 2
-
-
       parentPath = Path(path[0])
       print(f"\tQUARTER: {quarter}")
       for file in path[2]:

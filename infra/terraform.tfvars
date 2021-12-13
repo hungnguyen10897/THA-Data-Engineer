@@ -1,7 +1,10 @@
+# prefix for all AWS resources
 prefix = "hung-tha"
 
+# default tags for all AWS resources
 default_tags = {
     owner = "hung"
 }
 
-redshift_tha_user = "tha_admin"
+# main user of redshift
+redshift_tha_user = "tha_user"
