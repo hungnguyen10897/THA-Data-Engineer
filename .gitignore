@@ -158,3 +158,4 @@ init_data/csv/*.*/**
 **terraform.tfstate**
 **data_setup_configs.json**
 **flask_configs.json**
+web/containers.json

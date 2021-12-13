@@ -1,0 +1,27 @@
+# Image for Web deployment
+FROM ubuntu:18.04
+
+USER root
+
+WORKDIR /app
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get -y install tzdata && \
+    apt-get -y install unzip curl jq
+
+# Install awscli and lightsail plugin
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl" && \
+    chmod +x /usr/local/bin/lightsailctl
+
+RUN curl "https://download.docker.com/linux/static/stable/x86_64/docker-20.10.9.tgz" -o "./docker-20.10.9.tgz" && \
+    tar xzvf docker-20.10.9.tgz && \
+    cp docker/* /usr/bin/
+
+COPY deploy-web.sh .
+RUN chmod +x deploy-web.sh
+
+CMD ["./deploy-web.sh"]
