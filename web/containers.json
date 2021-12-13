@@ -1,8 +1,0 @@
-{
-    "flask": {
-        "image": ":tha-service.tha-service-container.12",
-        "ports": {
-            "8080": "HTTP"
-        }
-    }
-}

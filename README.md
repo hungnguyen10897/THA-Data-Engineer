@@ -13,23 +13,19 @@ With this new table, access to the original tables (`impressions`,`clicks`,`conv
 Redshift provides a fucntionality called Spectrum to directly query data files from S3. This is convenient in this case since we don't have to COPY the data back to Redshift in case we need any aggregations.
 
 
-
-
-
 ### 1.1 Permanent Storage
 ## Deployment
 Deployment is done in 2 steps: Create a docker image to ensure everything needed is available during deployment.
 
-First, create a credentials file in the root project directory so that the deplyoment container can deploy everything on your behalf
+
 ```
-[default]
-aws_access_key_id = <MY_ACCESS_KEY_ID>
-aws_secret_access_key = <MY_SECRET_ACCESS_KEY>
+docker build . -f Dockerfile-infra-deployment -t tha-infra-deployment && \
+docker run -v ~/.aws:/root/.aws -v $PWD/web:/app/web -v $PWD/init_data:/app/init_data -v $PWD/infra:/app/infra tha-infra-deployment
 ```
 
 ```
-docker build . -t tha-deployment && \
-docker run -v $PWD/web:/app/web -v $PWD/init_data:/app/init_data -v $PWD/infra:/app/infra tha-deployment
+docker build . -f Dockerfile-web-deployment -t tha-web-deployment && \
+docker run -v ~/.aws:/root/.aws -v $PWD/web:/app/web -v /var/run/docker.sock:/var/run/docker.sock tha-web-deployment
 ```
 
 ## Performance Testing
@@ -41,5 +37,7 @@ docker run -v $PWD/web:/app/web -v $PWD/init_data:/app/init_data -v $PWD/infra:/
 - Potential public S3
 - Authentication to S3 objects through own account
 - 
+
+## Reflections
 
 
