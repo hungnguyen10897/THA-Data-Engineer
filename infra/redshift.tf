@@ -92,7 +92,8 @@ resource "aws_redshift_cluster" "default" {
   master_username     = "hung"
   master_password     = random_password.redshift_master_password.result
   node_type           = "dc2.large"
-  cluster_type        = "single-node"
+  cluster_type        = "multi-node"
+  number_of_nodes     = "3"
   iam_roles           = [aws_iam_role.redshift.arn]
   skip_final_snapshot = true
 
