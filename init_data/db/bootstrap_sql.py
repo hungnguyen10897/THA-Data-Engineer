@@ -9,8 +9,6 @@ bootstrap_queries = [
 """
     CREATE USER {REDSHIFT_THA_USER} PASSWORD '{REDSHIFT_THA_USER_PASSWORD}';
 ""","""
-    DROP TABLE IF EXISTS revenues;
-""","""
     CREATE TABLE revenues(
         campaign_id INT NOT NULL,
         banner_id INT NOT NULL,
@@ -20,8 +18,6 @@ bootstrap_queries = [
 );
 ""","""
     -- Impressions
-    DROP TABLE IF EXISTS ext_tha_schema.impressions;
-""","""
     CREATE EXTERNAL TABLE ext_tha_schema.impressions(
         banner_id INT8 ,
         campaign_id INT8
@@ -37,8 +33,6 @@ bootstrap_queries = [
     PARTITION (quarter= 4) LOCATION 's3://{BUCKET}/impressions/quarter=4/';
 ""","""
     -- Clicks
-    DROP TABLE IF EXISTS ext_tha_schema.clicks;
-""","""
     CREATE EXTERNAL TABLE ext_tha_schema.clicks(
         banner_id INT8 ,
         campaign_id INT8,
@@ -55,8 +49,6 @@ bootstrap_queries = [
     PARTITION (quarter= 4) LOCATION 's3://{BUCKET}/clicks/quarter=4/';
 ""","""
     -- Conversions
-    DROP TABLE IF EXISTS ext_tha_schema.conversions;
-""","""
     CREATE EXTERNAL TABLE ext_tha_schema.conversions(
         conversion_id INT8,
         click_id INT8,
