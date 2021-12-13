@@ -7,6 +7,10 @@ from src.backend import get_banner_id, upload_csv
 from src import banner_images_url
 
 
+@app.route("/", methods=['GEt'])
+def landing():
+    return redirect(url_for('index'))
+
 @app.route("/campaigns",  methods=['GET'])
 def index():
     return render_template('index.html')
