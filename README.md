@@ -382,13 +382,13 @@ Lightsail Container Service:
 
 ![](images/5000-88.png)
 
-No errors for 5000 requests over 1 minute
+No errors for 5000 requests over 1 minute, [details](https://drive.google.com/file/d/1sa9D_LBb_8rIby28COITDbheNI3u9VI8/view?usp=sharing) (download and view from browser)
 
 <br/>
 
 ![](images/10000-200.png)
 
-About 4% error rate for 10000 requests over 1 minute
+About 4% error rate for 10000 requests over 1 minute, [details](https://drive.google.com/file/d/1AXwfi-9UJnsSseLF_Q7RUTcmrWlGGuVj/view?usp=sharing) (download and view from browser)
 
 It appears the performance is mostly dependent on Redshift scale and not much on Lightsail. This observation aligns with implementation intentions where I put most computation needs to Redshift.
 
