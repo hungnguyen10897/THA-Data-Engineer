@@ -196,10 +196,9 @@ _web/src/backend.py_
 ### 3.3 _Synch_ Stored Procedures' Implementations
 Making sure the synchronization and aggregation of new data with old aggregated data go correctly is important. 
 
-```
-**Note**
-It's worth noting that when new data arrive, that new data corresponds to 1 specific table (`impressions`, `clicks`, `conversions`) and 1 specific quarter. Despite this, the outcome of adding several data files will remain the same regardless of the order they are added.
-```
+
+**Note**: It's worth noting that when new data arrive, that new data corresponds to 1 specific table (`impressions`, `clicks`, `conversions`) and 1 specific quarter. Despite this, the outcome of adding several data files will remain the same regardless of the order they are added.
+
 
 ```    
     CREATE OR REPLACE PROCEDURE public.synch_new_impressions(ext_table character varying(256), quarter character varying(1))
@@ -336,6 +335,8 @@ The Flask app is deployed onto AWS Lightsail Container Service, a simple service
 To deploy to Lightsail Container Service, the web app Docker image needs to be built first and published to Lightsail. Since we already need to run AWS CLI commands inside a container, I want to build the Docker image of the Flask app inside the container as well. Otherwise, this step will need to be split into 2 separate steps. To achieve this, the docker socket is mounted as a volume to the container `-v /var/run/docker.sock:/var/run/docker.sock`, and inside the image, `docker` client is installed. This way the docker client in the container will use the docker daemon from host (local machine) to build the Flask image which is then pushed and run from Lightsail.
 
 Configuring size, service name and instance count is done in `deploy-web.sh` file. `SERVICE_NAME` should be in synch between `deploy-web.sh` and `clean.sh` files.
+
+Upon finishing the deployment, a message will display the URL to the service "*Service URL: < some_url >. It can take some time before the service is ready*"
 
 <br/>
 
