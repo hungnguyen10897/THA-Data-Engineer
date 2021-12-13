@@ -50,7 +50,7 @@ In this case, Redshift acts as the main backend database, accessing S3 when need
 
 <br/>
 
-### 2.3 Lightsail Container Service as Web App
+### 2.3 Lightsail Container Service for Web App
 Flask is containerized into a Docker Image and deployed to Lightsail for hosting. It's easy and simple enough for this use case.
 
 <br/>
@@ -387,9 +387,9 @@ No errors for 5000 requests over 1 minute
 
 ![](images/10000-200.png)
 
-About 4% for 10000 requests over 1 minute
+About 4% error rate for 10000 requests over 1 minute
 
-Details can be found under `stress_test_results`
+Details can be found under `stress_test_results`.
 
 It appears the performance is mostly dependent on Redshift scale and not much on Lightsail. This observation aligns with implementation intentions where I put most computation needs to Redshift.
 
