@@ -390,8 +390,6 @@ No errors for 5000 requests over 1 minute
 
 About 4% error rate for 10000 requests over 1 minute
 
-Details can be found under `stress_test_results`.
-
 It appears the performance is mostly dependent on Redshift scale and not much on Lightsail. This observation aligns with implementation intentions where I put most computation needs to Redshift.
 
 <br/>
