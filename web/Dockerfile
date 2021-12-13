@@ -19,7 +19,10 @@ RUN pip install -r requirements.txt
 
 # Copy the content of the local src directory to the working directory
 COPY src ./src/
+COPY flask_configs.json .
 COPY run.py .
+COPY run.sh .
+RUN chmod +x run.sh
 
 # Specify the command to run on container start
-CMD [ "python", "./run.py" ]
+CMD [ "./run.sh" ]

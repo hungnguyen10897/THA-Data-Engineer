@@ -15,7 +15,7 @@ bootstrap_queries = [
         quarter INT NOT NULL,
         revenue FLOAT NOT NULL,
         number_of_clicks INT NOT NULL
-);
+    );
 ""","""
     -- Impressions
     CREATE EXTERNAL TABLE ext_tha_schema.impressions(

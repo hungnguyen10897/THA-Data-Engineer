@@ -1,6 +1,6 @@
 {
     "flask": {
-        "image": ":flask-service.flask-container.1",
+        "image": ":tha-service.tha-service-container.12",
         "ports": {
             "8080": "HTTP"
         }
