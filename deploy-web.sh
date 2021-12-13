@@ -2,9 +2,11 @@
 
 set -e
 
+# Should be in-synch with SERVICE_NAME in clean.sh
 SERVICE_NAME=tha-service
+
 LIGHTSAIL_POWER=small
-LIGHTSAIL_SCALE=3
+LIGHTSAIL_SCALE=1
 
 # Build web image from within container
 cd web

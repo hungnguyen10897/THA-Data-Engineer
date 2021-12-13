@@ -21,7 +21,13 @@ At minimum, the app must comprise of Data Storage and a Backend to process and s
 Intuitively, we don't want to over-query the RDBMS by running a query that aggregate all time data for every request. An table called `revenues` contains aggregated data is generated, and now the backend only needs to query this table for a request to `campaigns/<campaign_id>`. The combination (`campaign_id`, `banner_id`, `quarter`) forms the Primary Key of this table.
 
 ```
-_table layout_
+CREATE TABLE revenues(
+    campaign_id INT NOT NULL,
+    banner_id INT NOT NULL,
+    quarter INT NOT NULL,
+    revenue FLOAT NOT NULL,             -- Sum of revenues
+    number_of_clicks INT NOT NULL       -- Count of clicks
+);
 ```
 
 With this new table, access to the original data tables (`impressions`,`clicks`,`conversions`) is no longer neccessary. We only need those tables when there is new data and we need to recompute the aggregations for `revenues`. Thus, I decide to store those tables in S3 to minimize cost from Redshift which is much more. Redshift provides a fucntionality called **Redshift Spectrum** to directly query data files from S3. This is convenient in this case since we don't have to `COPY` (expensive operation) the data back to Redshift in case we need any aggregations. Furthermore, pushing data files to S3 is many-folds faster than `INSERT` to any database.
@@ -281,7 +287,14 @@ There are other differences I will leave out.
 <br />
 
 ## 4. Deployment
-Prerequisites: Configured AWS CLI (valid `~/.aws/` directory) and running Docker service. All steps below will use your AWS CLI credentials.
+Prerequisites: 
+- Enough AWS Permissions for your account to create `Role`, `User`, `Policy`, `Policy Attachment`, `Glue Catalog Database`, `Redshift cluster`,...
+- As a separate resource, you need to be `Data Lake Administrator` for AWS Lake Formation of the region. This should be done from the portal like shown below.
+
+![](images/AWS_LF.png "AWS Lake Formation Administrator role assignment")
+ 
+ 
+- Configured AWS CLI (valid `~/.aws/` directory) and running Docker service. All steps below will use your AWS CLI credentials.
 
 Deployment is done in 2 steps, both in a Docker container to ensure everything needed is available (Python, AWS CLI, Lightsailctl, Terraform).
 
@@ -318,9 +331,11 @@ At project root directory, run:
 docker build . -f Dockerfile-web-deployment -t tha-web-deployment && \
 docker run --rm -v ~/.aws:/root/.aws -v $PWD/web:/app/web -v /var/run/docker.sock:/var/run/docker.sock tha-web-deployment
 ```
-The Flask app is deployed onto AWS Lightsail Container Service. This is a simple service to host web application. However, the downside is that it's not supported by Terraform yet and I decided to just deploy it using AWS CLI (with lightsailctl plugin). Again the commands to deploy the service is run inside a container.
+The Flask app is deployed onto AWS Lightsail Container Service, a simple service to host web application. However, the downside is that it's not supported by Terraform yet and I decided to just deploy it using AWS CLI (with lightsailctl plugin). Again the commands to deploy the service is run inside a container.
 
 To deploy to Lightsail Container Service, the web app Docker image needs to be built first and published to Lightsail. Since we already need to run AWS CLI commands inside a container, I want to build the Docker image of the Flask app inside the container as well. Otherwise, this step will need to be split into 2 separate steps. To achive this, the docker socket is mounted as a volume to the container `-v /var/run/docker.sock:/var/run/docker.sock`, and inside the image, `docker` client is installed. This way the docker client in the container will use the docker daemon from host (local machine) to build the Flask image which is then pushed and run from Lightsail.
+
+Configuring size, service name and instance count is done in `deploy-web.sh` file. `SERVICE_NAME` should be in synch between `deploy-web.sh` and `clean.sh` files.
 
 <br/>
 
@@ -341,15 +356,29 @@ The web app and infrastructure can be managed separately. The web app is managed
 <br/>
 
 ## 5. Stress Testing
+Script:
+```
+class StressTest(HttpUser):
+    wait_time = between(60,70)
+
+    @task
+    def get_banner(self):
+        i = randint(1,50)
+        self.client.get(f"/campaigns/{i}")
+```
+*web/locustfile.py*
+
+  node_type           = "ra3.xlplus"
+  cluster_type        = "multi-node"
 
 
+## 6. Improvements
+- Code is not tested. Partly because I don't have time, partly because it's kind of hard to test SQL queries, which accounts for a big amount of logic
+- CI/CD pipeline, not enough time, can be quite easily incorporated since deployments are dockerized
 
-## Improvements
-### Security
-- Potential public S3
-- Authentication to S3 objects through own account
-- 
+<br/>
+<br/>
 
-## Reflections
+## 7. Reflections
 
 

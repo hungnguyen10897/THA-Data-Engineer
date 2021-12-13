@@ -3,6 +3,7 @@ from locust import HttpUser, task, between
 from locust.user import wait_time
 
 class StressTest(HttpUser):
+    # Only 1 request 1 minute
     wait_time = between(60,70)
 
     @task

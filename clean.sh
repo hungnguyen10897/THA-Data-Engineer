@@ -2,6 +2,7 @@
 
 set -e
 
+# Should be in-synch with SERVICE_NAME in deploy-web.sh
 SERVICE_NAME=tha-service
 
 # Delete Lightsail Service
